@@ -12,19 +12,7 @@ const sequelize = new Sequelize(CONNECTION_STRING, {
    }
 })
 
-
-
 module.exports = {
-
-    getCountries: (req,res) => {
-        sequelize.query(`
-            SELECT * FROM countries 
-        `).then(dbRes => {
-            console.log(dbRes)
-            res.status(200).send(dbRes[0])
-        })
-    },
-
     seed: (req, res) => {
         sequelize.query(`
             drop table if exists cities;
@@ -238,9 +226,55 @@ module.exports = {
             ('Yemen'),
             ('Zambia'),
             ('Zimbabwe');
+
+            INSERT INTO cities (name,rating,country_id)
+            VALUES ('Livonia',5,187),
+            ('Berlin',3,65),
+            ('Miami',4,187);
         `).then(() => {
             console.log('DB seeded!')
             res.sendStatus(200)
         }).catch(err => console.log('error seeding DB', err))
+    },
+    getCountries: (req,res) => {
+        sequelize.query(`
+            SELECT * FROM countries 
+        `).then(dbRes => {
+            console.log(dbRes)
+            res.status(200).send(dbRes[0])
+        })
+    },
+
+    createCity: (req,res) => {
+        let { name,rating,countryId } = req.body
+        sequelize.query(`
+            INSERT INTO cities (name, rating, country_id)
+            VALUES ('${name}', ${rating}, ${countryId});
+        `).then(dbRes => {
+            console.log(dbRes)
+            res.status(200).send(dbRes[0])
+        })
+    },
+    getCities: (req,res) => {
+        sequelize.query(`
+            SELECT ci.city_id, ci.name AS city, ci.rating, co.country_id, co.name AS country
+            FROM cities AS ci
+            JOIN countries AS co
+            ON ci.country_id = co.country_id 
+            ORDER BY ci.rating DESC;
+        `).then(dbRes => {
+            console.log(dbRes)
+            res.status(200).send(dbRes[0])
+        })
+    },
+    deleteCity: (req,res) => {
+        let { id } = req.params
+        sequelize.query(`
+        DELETE FROM cities 
+        WHERE city_id = ${id};
+        `).then(dbRes => {
+            console.log(dbRes)
+            res.status(200).send(dbRes[0])
+        })
     }
 }
